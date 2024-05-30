@@ -1,13 +1,110 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
+import styled from 'styled-components';
+import Footer from './footer';
 
 const OMDB_API_URL = 'https://www.omdbapi.com/';
 const API_KEY = '4bc1b69';
+
+const Container = styled.div`
+  background-color: lightgray;
+  background-size: cover;
+  background-position: center;
+  min-height: 100vh;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: Arial, sans-serif;
+`;
+
+const SearchInput = styled.input`
+  width: 40%;
+  padding: 10px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  margin-bottom: 20px;
+`;
+
+const MovieContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+`;
+
+const MovieCard = styled(Link)`
+  width: 200px;
+  margin: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.3s;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+`;
+
+const Poster = styled.img`
+  width: 100%;
+  height: auto;
+  border-radius: 5px;
+`;
+
+const MovieInfo = styled.div`
+  margin-top: 10px;
+`;
+
+const Title = styled.h2`
+  font-size: 18px;
+  margin-bottom: 5px;
+`;
+
+const StaticCards = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+`;
+
+const ErrorMessage = styled.p`
+  color: red;
+  font-size: 1.2rem;
+  margin-top: 20px;
+`;
 
 const MovieSearch = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [movies, setMovies] = useState([]);
   const [error, setError] = useState(null);
+  const [staticMovies, setStaticMovies] = useState([]);
+
+  useEffect(() => {
+    const fetchStaticMovieData = async () => {
+      try {
+        const response1 = await axios.get(`${OMDB_API_URL}?s=batman&apikey=${API_KEY}&page=1`);
+        const response2 = await axios.get(`${OMDB_API_URL}?s=batman&apikey=${API_KEY}&page=2`);
+        if (response1.data.Response === 'True' && response2.data.Response === 'True') {
+          const combinedMovies = [...response1.data.Search, ...response2.data.Search];
+          setStaticMovies(combinedMovies.slice(0, 20));
+        } else {
+          setError('An error occurred while fetching data.');
+        }
+      } catch (error) {
+        console.error('Error fetching static movie data:', error);
+        setError('An error occurred while fetching data. Please try again later.');
+      }
+    };
+
+    fetchStaticMovieData();
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -26,16 +123,11 @@ const MovieSearch = () => {
     }
   };
 
-  useEffect(() => {
-    if (searchTerm) {
-      fetchData();
-    } else {
-      setMovies([]);
-    }
-  }, [searchTerm]);
-
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
+    if (event.target.value === '') {
+      setError(null); // Reset error message when clearing search term
+    }
   };
 
   const handleKeyPress = (event) => {
@@ -45,84 +137,49 @@ const MovieSearch = () => {
   };
 
   return (
-    <div style={styles.container}>
-      <h1>Movie Search</h1>
-      <input
+    <Container>
+      <h3>Movie Search</h3>
+      <SearchInput
         type="text"
         placeholder="Search for movies"
         value={searchTerm}
         onChange={handleSearchChange}
         onKeyPress={handleKeyPress}
-        style={styles.input}
       />
-      {error && <p>{error}</p>}
-      <div style={styles.movieContainer}>
-        {movies.map(movie => (
-          <div key={movie.imdbID} style={styles.movieCard}>
-            <img src={movie.Poster} alt={movie.Title} style={styles.poster} />
-            <div style={styles.movieInfo}>
-              <h2 style={styles.title}>{movie.Title}</h2>
-              {movie.Language && <p style={styles.language}>Language: {movie.Language}</p>}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {(searchTerm === '' && !error) && ( // Only render static cards if searchTerm is empty and there is no error
+        <StaticCards>
+          {staticMovies.map((movie, index) => (
+            <StaticCard key={index} movie={movie} />
+          ))}
+        </StaticCards>
+      )}
+      {movies.length > 0 && ( // Only render movie cards if there are movies
+        <MovieContainer>
+          {movies.map(movie => (
+            <MovieCard to={`/movie/${movie.imdbID}`} key={movie.imdbID}>
+              <Poster src={movie.Poster} alt={movie.Title} />
+              <MovieInfo>
+                <Title>{movie.Title}</Title>
+              </MovieInfo>
+            </MovieCard>
+          ))}
+        </MovieContainer>
+      )}
+      {!searchTerm && <Footer />} {/* Render footer only if searchTerm is empty */}
+    </Container>
   );
 };
 
-const styles = {
-  container: {
-   backgroundColor:'lightgray',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    minHeight: '100vh',
-    padding: '20px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  input: {
-    width: '40%',
-    padding: '10px',
-    fontSize: '16px',
-    border: 'none',
-    borderRadius: '5px',
-    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-    boxSizing: 'border-box',
-    marginBottom: '10px',
-  },
-  movieContainer: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-  },
-  movieCard: {
-    width: '200px',
-    margin: '10px',
-    padding: '10px',
-    border: '1px solid #ccc',
-    borderRadius: '5px',
-    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-    backgroundColor: '#fff',
-  },
-  poster: {
-    width: '100%',
-    height: 'auto',
-    borderRadius: '5px',
-  },
-  movieInfo: {
-    marginTop: '10px',
-  },
-  title: {
-    fontSize: '18px',
-    marginBottom: '5px',
-  },
-  language: {
-    fontSize: '14px',
-    color: '#666',
-    marginBottom: '0',
-  },
+const StaticCard = ({ movie }) => {
+  return (
+    <MovieCard to={`/movie/${movie.imdbID}`}>
+      <Poster src={movie.Poster} alt={movie.Title} />
+      <MovieInfo>
+        <Title>{movie.Title}</Title>
+      </MovieInfo>
+    </MovieCard>
+  );
 };
 
 export default MovieSearch;
