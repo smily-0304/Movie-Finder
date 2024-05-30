@@ -48,7 +48,7 @@ const Contact = () => {
         reach out to us using the following contact information:
       </Paragraph>
       <ContactInfo>
-        <ContactLabel>Email:</ContactLabel> support@moviefinder.com <br />
+        <ContactLabel>Email:</ContactLabel> sowmya@moviefinder.com <br />
         <ContactLabel>Phone:</ContactLabel> +1 (555) 123-4567 <br />
         <ContactLabel>Address:</ContactLabel> 123 Movie Street, Hollywood, CA 90001
       </ContactInfo>

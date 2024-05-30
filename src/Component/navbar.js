@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import logo from "./logo.png";
+
 
 const Navbar = () => {
   return (
@@ -11,6 +13,10 @@ const Navbar = () => {
         <Link to="/" style={styles.navItem}>Home</Link>
         <Link to="/about" style={styles.navItem}>About</Link>
         <Link to="/contact" style={styles.navItem}>Contact</Link>
+        <Link to="/liked" style={styles.navItem}>
+          <img src={logo} alt="Liked" style={styles.icon} /> {/* Add the icon here */}
+        
+        </Link>
       </div>
     </nav>
   );
@@ -37,12 +43,21 @@ const styles = {
   },
   links: {
     marginRight: '20px', // Adjust as needed
+    display: 'flex',
+    alignItems: 'center',
   },
   navItem: {
     color: '#fff',
     textDecoration: 'none',
     margin: '0 10px',
     fontSize: '16px',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  icon: {
+    width: '25px', // Adjust the size of the icon as needed
+    height: '25px',
+    marginRight: '5px',
   },
 };
 
